@@ -35,8 +35,9 @@ async function request(endpoint, options = {}) {
   };
 
   // Add authorization header if tokens are available
-  if (authTokens?.accessToken) {
-    headers.Authorization = `Bearer ${authTokens.accessToken}`;
+  // Use idToken for authentication (contains user claims)
+  if (authTokens?.idToken) {
+    headers.Authorization = `Bearer ${authTokens.idToken}`;
   }
 
   const config = {
@@ -111,8 +112,9 @@ export async function uploadFile(endpoint, file, fieldName = 'file') {
   const headers = {};
 
   // Add authorization header if tokens are available
-  if (authTokens?.accessToken) {
-    headers.Authorization = `Bearer ${authTokens.accessToken}`;
+  // Use idToken for authentication (contains user claims)
+  if (authTokens?.idToken) {
+    headers.Authorization = `Bearer ${authTokens.idToken}`;
   }
 
   try {
