@@ -1,7 +1,29 @@
 const fc = require('fast-check');
 const aiService = require('../aiService');
+const AWS = require('aws-sdk');
+
+// Mock AWS Bedrock to avoid real API calls during tests
+jest.mock('aws-sdk', () => {
+  const mockInvokeModel = jest.fn();
+  return {
+    BedrockRuntime: jest.fn(() => ({
+      invokeModel: mockInvokeModel,
+    })),
+    __mockInvokeModel: mockInvokeModel,
+  };
+});
 
 describe('AI Service', () => {
+  beforeEach(() => {
+    // Reset mocks before each test
+    jest.clearAllMocks();
+    
+    // Mock Bedrock to return an error, forcing fallback mode for predictable tests
+    const mockInvokeModel = require('aws-sdk').__mockInvokeModel;
+    mockInvokeModel.mockReturnValue({
+      promise: jest.fn().mockRejectedValue(new Error('Bedrock unavailable in test')),
+    });
+  });
   /**
    * Feature: taskbreaker, Property 40: AI generates valid subtask count
    * Validates: Requirements 12.1

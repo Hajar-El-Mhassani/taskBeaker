@@ -49,6 +49,7 @@ Resources:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
         - ALLOW_USER_SRP_AUTH
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
       PreventUserExistenceErrors: ENABLED
       AccessTokenValidity: 1
       IdTokenValidity: 1
@@ -147,6 +148,7 @@ Resources:
           USER_POOL_ID: !Ref TaskBreakerUserPool
           USER_POOL_CLIENT_ID: !Ref TaskBreakerUserPoolClient
           AWS_REGION_CUSTOM: !Ref AWS::Region
+          BEDROCK_MODEL_ID: anthropic.claude-3-sonnet-20240229-v1:0
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
@@ -161,7 +163,12 @@ Resources:
                 - cognito-idp:AdminCreateUser
                 - cognito-idp:AdminInitiateAuth
                 - cognito-idp:AdminSetUserPassword
+                - cognito-idp:AdminConfirmSignUp
               Resource: !GetAtt TaskBreakerUserPool.Arn
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0'
       Events:
         ApiEvent:
           Type: HttpApi

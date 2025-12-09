@@ -1,11 +1,18 @@
 /**
- * AI Service for generating task breakdowns and schedules
- * This is a placeholder implementation with mock data
- * In production, this would integrate with AWS Bedrock or another AI service
+ * AI Service for generating task breakdowns and schedules using AWS Bedrock
  */
 
+const AWS = require('aws-sdk');
+
+const bedrock = new AWS.BedrockRuntime({
+  region: process.env.AWS_REGION_CUSTOM || process.env.AWS_REGION || 'us-east-1',
+});
+
+// Use Claude 3 Sonnet as the default model
+const MODEL_ID = process.env.BEDROCK_MODEL_ID || 'anthropic.claude-3-sonnet-20240229-v1:0';
+
 /**
- * Generate a task plan with subtasks and schedule
+ * Generate a task plan with subtasks and schedule using AWS Bedrock
  * @param {string} taskName - Name of the task
  * @param {string} timeMode - "days" or "hours"
  * @param {number} amount - Number of days or hours
@@ -23,133 +30,166 @@ async function generatePlan(taskName, timeMode, amount, userPreferences = {}) {
     'Friday',
   ];
 
-  // Generate a random number of subtasks (3-10)
-  const numSubtasks = Math.floor(Math.random() * 8) + 3;
+  // Create the prompt for Bedrock
+  const prompt = `You are a task planning assistant. Generate a detailed task breakdown for the following:
 
-  // Sample subtask templates
-  const subtaskTemplates = [
-    { name: 'Research and planning', duration: '2h', priority: 'High' },
-    { name: 'Initial setup and configuration', duration: '1h', priority: 'High' },
-    { name: 'Core implementation', duration: '4h', priority: 'High' },
-    { name: 'Testing and validation', duration: '2h', priority: 'Medium' },
-    { name: 'Documentation', duration: '1h', priority: 'Medium' },
-    { name: 'Code review', duration: '1h', priority: 'Medium' },
-    { name: 'Bug fixes and refinements', duration: '2h', priority: 'Medium' },
-    { name: 'Performance optimization', duration: '3h', priority: 'Low' },
-    { name: 'Final review and cleanup', duration: '1h', priority: 'Low' },
-    { name: 'Deployment preparation', duration: '2h', priority: 'Medium' },
+Task: ${taskName}
+Time Constraint: ${amount} ${timeMode}
+Max Hours Per Day: ${maxHoursPerDay}
+Work Days: ${workDays.join(', ')}
+
+Generate a task plan with 3-10 subtasks. Each subtask should have:
+- id: sequential number as string (e.g., "1", "2", "3")
+- name: descriptive name for the subtask
+- duration: estimated time in format like "2h" or "45m"
+- priority: "High", "Medium", or "Low"
+- done: false (boolean)
+
+Also create a schedule that distributes subtasks across ${timeMode === 'days' ? 'days' : 'sessions'}, respecting the ${maxHoursPerDay} hours per day limit.
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "subtasks": [
+    {
+      "id": "1",
+      "name": "Subtask name",
+      "duration": "2h",
+      "priority": "High",
+      "done": false
+    }
+  ],
+  "schedule": {
+    "${timeMode === 'days' ? 'day1' : 'session1'}": ["1", "2"],
+    "${timeMode === 'days' ? 'day2' : 'session2'}": ["3"]
+  },
+  "totalEstimatedTime": "10h",
+  "notes": "Brief description of the plan"
+}`;
+
+  try {
+    // Call Bedrock with Claude 3
+    const params = {
+      modelId: MODEL_ID,
+      contentType: 'application/json',
+      accept: 'application/json',
+      body: JSON.stringify({
+        anthropic_version: 'bedrock-2023-05-31',
+        max_tokens: 4096,
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+      }),
+    };
+
+    const response = await bedrock.invokeModel(params).promise();
+    const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+
+    // Extract the generated text from Claude's response
+    const generatedText = responseBody.content[0].text;
+
+    // Parse the JSON from the response
+    // Claude might wrap it in markdown code blocks, so we need to extract it
+    let jsonText = generatedText.trim();
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.replace(/```json\n?/, '').replace(/\n?```$/, '');
+    } else if (jsonText.startsWith('```')) {
+      jsonText = jsonText.replace(/```\n?/, '').replace(/\n?```$/, '');
+    }
+
+    const plan = JSON.parse(jsonText);
+
+    // Validate the plan structure
+    if (!validatePlan(plan)) {
+      throw new Error('Generated plan does not meet validation requirements');
+    }
+
+    return plan;
+  } catch (error) {
+    console.error('Bedrock API error:', error);
+
+    // Fallback to a simple generated plan if Bedrock fails
+    return generateFallbackPlan(taskName, timeMode, amount, maxHoursPerDay);
+  }
+}
+
+/**
+ * Fallback plan generator if Bedrock is unavailable
+ */
+function generateFallbackPlan(taskName, timeMode, amount, maxHoursPerDay) {
+  const subtasks = [
+    {
+      id: '1',
+      name: `Research and planning for ${taskName}`,
+      duration: '2h',
+      priority: 'High',
+      done: false,
+    },
+    {
+      id: '2',
+      name: `Initial setup for ${taskName}`,
+      duration: '1h',
+      priority: 'High',
+      done: false,
+    },
+    {
+      id: '3',
+      name: `Core implementation of ${taskName}`,
+      duration: '3h',
+      priority: 'High',
+      done: false,
+    },
+    {
+      id: '4',
+      name: `Testing ${taskName}`,
+      duration: '2h',
+      priority: 'Medium',
+      done: false,
+    },
+    {
+      id: '5',
+      name: `Documentation for ${taskName}`,
+      duration: '1h',
+      priority: 'Medium',
+      done: false,
+    },
   ];
 
-  // Generate subtasks
-  const subtasks = [];
-  const usedTemplates = new Set();
-
-  for (let i = 0; i < numSubtasks; i++) {
-    let template;
-    do {
-      template = subtaskTemplates[Math.floor(Math.random() * subtaskTemplates.length)];
-    } while (usedTemplates.has(template.name) && usedTemplates.size < subtaskTemplates.length);
-
-    usedTemplates.add(template.name);
-
-    // Vary the duration slightly
-    const baseDuration = parseInt(template.duration);
-    const variance = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-    const duration = Math.max(1, baseDuration + variance);
-
-    subtasks.push({
-      id: String(i + 1),
-      name: `${template.name} for ${taskName}`,
-      duration: `${duration}h`,
-      priority: template.priority,
-      done: false,
-    });
-  }
-
-  // Calculate total estimated time
-  const totalHours = subtasks.reduce((sum, subtask) => {
-    return sum + parseInt(subtask.duration);
-  }, 0);
-
-  // Generate schedule based on time mode
+  // Distribute subtasks respecting maxHoursPerDay
   const schedule = {};
+  let currentDay = 1;
+  let currentDayHours = 0;
+  let subtaskIndex = 0;
 
-  if (timeMode === 'days') {
-    // Distribute subtasks across days
-    let currentDay = 1;
-    let currentDayHours = 0;
-    let subtaskIndex = 0;
+  while (subtaskIndex < subtasks.length) {
+    const dayKey = timeMode === 'days' ? `day${currentDay}` : `session${currentDay}`;
+    schedule[dayKey] = [];
 
-    while (subtaskIndex < subtasks.length && currentDay <= amount) {
-      const dayKey = `day${currentDay}`;
-      schedule[dayKey] = [];
+    while (subtaskIndex < subtasks.length && currentDayHours < maxHoursPerDay) {
+      const subtask = subtasks[subtaskIndex];
+      const subtaskHours = parseInt(subtask.duration);
 
-      while (subtaskIndex < subtasks.length && currentDayHours < maxHoursPerDay) {
-        const subtask = subtasks[subtaskIndex];
-        const subtaskHours = parseInt(subtask.duration);
-
-        if (currentDayHours + subtaskHours <= maxHoursPerDay) {
-          schedule[dayKey].push(subtask.id);
-          currentDayHours += subtaskHours;
-          subtaskIndex++;
-        } else {
-          break;
-        }
-      }
-
-      currentDay++;
-      currentDayHours = 0;
-    }
-
-    // If there are remaining subtasks, add them to the last day
-    if (subtaskIndex < subtasks.length) {
-      const lastDayKey = `day${currentDay - 1}`;
-      while (subtaskIndex < subtasks.length) {
-        schedule[lastDayKey].push(subtasks[subtaskIndex].id);
+      if (currentDayHours + subtaskHours <= maxHoursPerDay) {
+        schedule[dayKey].push(subtask.id);
+        currentDayHours += subtaskHours;
         subtaskIndex++;
+      } else {
+        break;
       }
     }
-  } else if (timeMode === 'hours') {
-    // Distribute subtasks to fit within total hours
-    let remainingHours = amount;
-    let subtaskIndex = 0;
-    let dayCounter = 1;
 
-    while (subtaskIndex < subtasks.length && remainingHours > 0) {
-      const dayKey = `session${dayCounter}`;
-      schedule[dayKey] = [];
-      let sessionHours = 0;
-
-      while (
-        subtaskIndex < subtasks.length &&
-        sessionHours < maxHoursPerDay &&
-        remainingHours > 0
-      ) {
-        const subtask = subtasks[subtaskIndex];
-        const subtaskHours = parseInt(subtask.duration);
-
-        if (sessionHours + subtaskHours <= Math.min(maxHoursPerDay, remainingHours)) {
-          schedule[dayKey].push(subtask.id);
-          sessionHours += subtaskHours;
-          remainingHours -= subtaskHours;
-          subtaskIndex++;
-        } else {
-          break;
-        }
-      }
-
-      dayCounter++;
-    }
+    currentDay++;
+    currentDayHours = 0;
   }
-
-  // Generate notes
-  const notes = `This task plan was generated for "${taskName}" with a ${timeMode} constraint of ${amount} ${timeMode}. The plan includes ${numSubtasks} subtasks with an estimated total time of ${totalHours} hours. Adjust the schedule based on your actual progress and priorities.`;
 
   return {
     subtasks,
     schedule,
-    totalEstimatedTime: `${totalHours}h`,
-    notes,
+    totalEstimatedTime: '9h',
+    notes: `Basic task plan for "${taskName}" (fallback mode). Customize as needed.`,
   };
 }
 
