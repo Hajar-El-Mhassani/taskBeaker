@@ -1,0 +1,209 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: TaskBreaker - AI-powered task planning application
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: nodejs18.x
+    Environment:
+      Variables:
+        NODE_ENV: production
+
+Resources:
+  # Cognito User Pool
+  TaskBreakerUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: taskbreaker-users
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: false
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+
+  # Cognito User Pool Client
+  TaskBreakerUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: taskbreaker-client
+      UserPoolId: !Ref TaskBreakerUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      PreventUserExistenceErrors: ENABLED
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      RefreshTokenValidity: 30
+      TokenValidityUnits:
+        AccessToken: hours
+        IdToken: hours
+        RefreshToken: days
+
+  # DynamoDB Users Table
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: TaskBreaker-Users
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # DynamoDB TaskPlans Table
+  TaskPlansTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: TaskBreaker-TaskPlans
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: taskId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: taskId
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # S3 Bucket for file storage
+  TaskBreakerBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'taskbreaker-app-bucket-${AWS::AccountId}'
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+              - HEAD
+            AllowedHeaders:
+              - '*'
+            MaxAge: 3000
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  # S3 Bucket Policy for public read access
+  TaskBreakerBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TaskBreakerBucket
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - s3:GetObject
+            Resource: !Sub '${TaskBreakerBucket.Arn}/*'
+
+  # Lambda Function
+  TaskBreakerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: taskbreaker-api
+      CodeUri: ./
+      Handler: src/lambda.handler
+      Runtime: nodejs18.x
+      Timeout: 30
+      MemorySize: 512
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+          TASKS_TABLE: !Ref TaskPlansTable
+          S3_BUCKET: !Ref TaskBreakerBucket
+          USER_POOL_ID: !Ref TaskBreakerUserPool
+          USER_POOL_CLIENT_ID: !Ref TaskBreakerUserPoolClient
+          AWS_REGION_CUSTOM: !Ref AWS::Region
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TaskPlansTable
+        - S3CrudPolicy:
+            BucketName: !Ref TaskBreakerBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminGetUser
+                - cognito-idp:AdminCreateUser
+                - cognito-idp:AdminInitiateAuth
+                - cognito-idp:AdminSetUserPassword
+              Resource: !GetAtt TaskBreakerUserPool.Arn
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            TimeoutInMillis: 29000
+            PayloadFormatVersion: '2.0'
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+    Export:
+      Name: TaskBreakerApiUrl
+
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref TaskBreakerUserPool
+    Export:
+      Name: TaskBreakerUserPoolId
+
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref TaskBreakerUserPoolClient
+    Export:
+      Name: TaskBreakerUserPoolClientId
+
+  UsersTableName:
+    Description: DynamoDB Users Table Name
+    Value: !Ref UsersTable
+    Export:
+      Name: TaskBreakerUsersTable
+
+  TaskPlansTableName:
+    Description: DynamoDB TaskPlans Table Name
+    Value: !Ref TaskPlansTable
+    Export:
+      Name: TaskBreakerTaskPlansTable
+
+  S3BucketName:
+    Description: S3 Bucket Name
+    Value: !Ref TaskBreakerBucket
+    Export:
+      Name: TaskBreakerS3Bucket
