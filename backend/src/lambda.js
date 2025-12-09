@@ -1,15 +1,17 @@
-const awsServerlessExpress = require('aws-serverless-express');
+const serverless = require('serverless-http');
 const app = require('./app');
 
-// Create server
-const server = awsServerlessExpress.createServer(app);
+// Wrap Express app for Lambda
+const handler = serverless(app);
 
 // Lambda handler
-exports.handler = (event, context) => {
+exports.handler = async (event, context) => {
   console.log('Lambda invoked:', {
-    path: event.rawPath || event.path,
+    rawPath: event.rawPath,
+    path: event.path,
     method: event.requestContext?.http?.method || event.httpMethod,
+    headers: event.headers,
   });
 
-  return awsServerlessExpress.proxy(server, event, context, 'PROMISE').promise;
+  return await handler(event, context);
 };
