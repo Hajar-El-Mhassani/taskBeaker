@@ -178,8 +178,7 @@ Resources:
     Properties:
       CorsConfiguration:
         AllowOrigins:
-          - 'https://main.d55wh8rbod9xx.amplifyapp.com'
-          - 'http://localhost:3000'
+          - '*'
         AllowMethods:
           - GET
           - POST
