@@ -104,7 +104,7 @@ aws cloudformation describe-stacks \
 ## What Happens During Deployment
 
 1. ✅ Amplify clones your Git repository
-2. ✅ Runs `npm ci` in frontend directory
+2. ✅ Runs `npm install` in frontend directory
 3. ✅ Runs `npm run build` to build Next.js
 4. ✅ Deploys to CloudFront CDN
 5. ✅ Provides HTTPS URL automatically
