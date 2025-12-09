@@ -170,11 +170,31 @@ Resources:
             Method: ANY
             TimeoutInMillis: 29000
             PayloadFormatVersion: '2.0'
+            ApiId: !Ref TaskBreakerHttpApi
+
+  # HTTP API with CORS configuration
+  TaskBreakerHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - 'https://main.d55wh8rbod9xx.amplifyapp.com'
+          - 'http://localhost:3000'
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - '*'
+        MaxAge: 300
+        AllowCredentials: false
 
 Outputs:
   ApiUrl:
     Description: API Gateway endpoint URL
-    Value: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+    Value: !Sub 'https://${TaskBreakerHttpApi}.execute-api.${AWS::Region}.amazonaws.com'
     Export:
       Name: TaskBreakerApiUrl
 
