@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { get, post } from '@/lib/api';
 import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { useAuth } from '@/context/AuthContext';
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState([]);
@@ -20,10 +21,17 @@ export default function TasksPage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { loading: authLoading, user } = useAuth();
 
   useEffect(() => {
-    loadTasks();
-  }, []);
+    // Only load tasks after auth is loaded and user is authenticated
+    if (!authLoading && user) {
+      loadTasks();
+    } else if (!authLoading && !user) {
+      // Auth loaded but no user - will be redirected by ProtectedRoute
+      setLoading(false);
+    }
+  }, [authLoading, user]);
 
   async function loadTasks() {
     try {
