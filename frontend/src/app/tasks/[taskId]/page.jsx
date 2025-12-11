@@ -129,17 +129,20 @@ export default function TaskDetailPage({ params }) {
   const SubtaskItem = ({ subtask, showCheckbox = true }) => {
     const [expanded, setExpanded] = useState(true); // Default to expanded to show details
     const [localProgress, setLocalProgress] = useState(subtask.progress || 0);
+    const [isSaving, setIsSaving] = useState(false);
     const currentProgress = subtask.progress || 0;
     
-    // Sync local progress when subtask changes
+    // Sync local progress when subtask changes (but not while saving)
     useEffect(() => {
-      setLocalProgress(subtask.progress || 0);
-    }, [subtask.progress]);
+      if (!isSaving) {
+        setLocalProgress(subtask.progress || 0);
+      }
+    }, [subtask.progress, isSaving]);
     
-    // Determine status
+    // Determine status based on actual progress from database
     const getStatus = () => {
       if (subtask.done) return { label: 'Completed', color: 'bg-success-100 text-success-700', icon: '✅' };
-      if (currentProgress > 0) return { label: 'In Progress', color: 'bg-warning-100 text-warning-700', icon: '⚡' };
+      if (localProgress > 0) return { label: 'In Progress', color: 'bg-warning-100 text-warning-700', icon: '⚡' };
       return { label: 'Not Started', color: 'bg-gray-100 text-gray-600', icon: '⏳' };
     };
     
@@ -209,7 +212,12 @@ export default function TaskDetailPage({ params }) {
                   <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-sm font-bold text-gray-700">Track Progress:</label>
-                      <span className="text-lg font-bold text-brand-600">{localProgress}%</span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg font-bold text-brand-600">{localProgress}%</span>
+                        {isSaving && (
+                          <span className="text-xs text-green-600 font-semibold">✓ Saved</span>
+                        )}
+                      </div>
                     </div>
                     <input
                       type="range"
@@ -222,13 +230,17 @@ export default function TaskDetailPage({ params }) {
                         const newValue = parseInt(e.target.value);
                         setLocalProgress(newValue);
                       }}
-                      onMouseUp={(e) => {
+                      onMouseUp={async (e) => {
                         e.stopPropagation();
-                        updateSubtaskProgress(subtask.id, localProgress);
+                        setIsSaving(true);
+                        await updateSubtaskProgress(subtask.id, localProgress);
+                        setTimeout(() => setIsSaving(false), 1500);
                       }}
-                      onTouchEnd={(e) => {
+                      onTouchEnd={async (e) => {
                         e.stopPropagation();
-                        updateSubtaskProgress(subtask.id, localProgress);
+                        setIsSaving(true);
+                        await updateSubtaskProgress(subtask.id, localProgress);
+                        setTimeout(() => setIsSaving(false), 1500);
                       }}
                       onClick={(e) => e.stopPropagation()}
                       className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-500"

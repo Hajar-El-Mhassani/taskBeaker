@@ -41,10 +41,18 @@ export default function ProfilePage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setMessage('');
+    setMessage('💾 Saving changes...');
     setLoading(true);
 
     try {
+      console.log('Updating profile with:', {
+        name: formData.name,
+        preferences: {
+          maxHoursPerDay: formData.maxHoursPerDay,
+          workDays: formData.workDays,
+        },
+      });
+
       const response = await patch('/auth/profile', {
         name: formData.name,
         preferences: {
@@ -53,17 +61,35 @@ export default function ProfilePage() {
         },
       });
       
+      console.log('Profile update response:', response);
+      
       // Update local user state with the response
       if (response.data) {
         setLocalUser(response.data);
         // Also update the global user context
         updateUser(response.data);
+        setMessage('✅ Profile updated successfully!');
+      } else {
+        setMessage('⚠️ Update completed but no data returned');
       }
-      
-      setMessage('Profile updated successfully!');
     } catch (error) {
       console.error('Profile update error:', error);
-      setMessage('Failed to update profile: ' + (error.message || 'Unknown error'));
+      console.error('Error details:', {
+        message: error.message,
+        status: error.status,
+        data: error.data
+      });
+      
+      let errorMessage = 'Failed to update profile';
+      if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+        errorMessage = '❌ Cannot connect to server. Backend might not be deployed or not responding.';
+      } else if (error.status === 401) {
+        errorMessage = '❌ Authentication failed. Please log in again.';
+      } else if (error.message) {
+        errorMessage = '❌ ' + error.message;
+      }
+      
+      setMessage(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -73,37 +99,60 @@ export default function ProfilePage() {
     const file = e.target.files[0];
     if (!file) return;
 
+    console.log('Selected file:', file.name, file.type, file.size);
+
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setMessage('File size must be less than 5MB');
+      setMessage('❌ File size must be less than 5MB');
       return;
     }
 
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      setMessage('Only image files are allowed (JPEG, PNG, GIF, WebP)');
+      setMessage('❌ Only image files are allowed (JPEG, PNG, GIF, WebP)');
       return;
     }
 
-    setMessage('');
+    setMessage('📤 Uploading image...');
     setLoading(true);
 
     try {
+      console.log('Uploading to /auth/avatar...');
       const response = await uploadFile('/auth/avatar', file, 'avatar');
+      console.log('Upload response:', response);
       
       // Update local user state with new avatar URL
       if (response.data?.avatarUrl) {
         const updatedUser = { ...localUser, avatarUrl: response.data.avatarUrl };
+        console.log('Updated user with avatar:', updatedUser.avatarUrl);
         setLocalUser(updatedUser);
         // Also update the global user context
         updateUser(updatedUser);
+        setMessage('✅ Avatar uploaded successfully!');
+      } else {
+        setMessage('⚠️ Upload completed but no avatar URL returned');
       }
-      
-      setMessage('Avatar uploaded successfully!');
     } catch (error) {
       console.error('Avatar upload error:', error);
-      setMessage('Failed to upload avatar: ' + (error.message || 'Unknown error'));
+      console.error('Error details:', {
+        message: error.message,
+        status: error.status,
+        data: error.data
+      });
+      
+      let errorMessage = 'Failed to upload avatar';
+      if (error.message.includes('fetch')) {
+        errorMessage = '❌ Cannot connect to server. Backend might not be deployed.';
+      } else if (error.status === 401) {
+        errorMessage = '❌ Authentication failed. Please log in again.';
+      } else if (error.status === 413) {
+        errorMessage = '❌ File too large. Maximum size is 5MB.';
+      } else if (error.message) {
+        errorMessage = '❌ ' + error.message;
+      }
+      
+      setMessage(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -126,24 +175,42 @@ export default function ProfilePage() {
 
           {/* Avatar */}
           <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Avatar</h2>
+            <h2 className="text-xl font-semibold mb-4">Profile Picture</h2>
             <div className="flex items-center space-x-4">
-              {localUser?.avatarUrl ? (
-                <img src={localUser.avatarUrl} alt="Avatar" className="w-20 h-20 rounded-full object-cover" />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-2xl text-gray-500">{localUser?.name?.[0]?.toUpperCase()}</span>
-                </div>
-              )}
-              <div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarUpload}
-                  disabled={loading}
-                  className="text-sm"
-                />
-                <p className="text-xs text-gray-500 mt-1">Max 5MB (PNG, JPG, GIF, WebP)</p>
+              <div className="relative">
+                {localUser?.avatarUrl ? (
+                  <img 
+                    src={localUser.avatarUrl} 
+                    alt="Avatar" 
+                    className="w-24 h-24 rounded-full object-cover border-4 border-brand-200" 
+                    key={localUser.avatarUrl}
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-r from-brand-500 to-primary-600 flex items-center justify-center border-4 border-brand-200">
+                    <span className="text-3xl text-white font-bold">{localUser?.name?.[0]?.toUpperCase()}</span>
+                  </div>
+                )}
+                {loading && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <label className="cursor-pointer">
+                  <div className="bg-gradient-to-r from-brand-500 to-primary-600 text-white hover:from-brand-600 hover:to-primary-700 font-medium py-2 px-4 rounded-lg transition-all inline-block">
+                    {loading ? 'Uploading...' : '📷 Choose Photo'}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={loading}
+                    className="hidden"
+                  />
+                </label>
+                <p className="text-xs text-gray-500 mt-2">Max 5MB • PNG, JPG, GIF, WebP</p>
+                <p className="text-xs text-gray-400 mt-1">Your photo will appear in the navbar</p>
               </div>
             </div>
           </div>
