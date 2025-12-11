@@ -83,7 +83,7 @@ export default function Navbar() {
                         : 'text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-primary-50'
                     }`}
                   >
-                    <span>Your Tasks</span>
+                    <span>My Tasks</span>
                     <svg 
                       className={`w-3 h-3 transform transition-transform ${tasksDropdownOpen ? 'rotate-180' : ''}`}
                       fill="none" 
@@ -98,7 +98,7 @@ export default function Navbar() {
                     <div className="absolute left-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
                       <div className="p-3 border-b border-gray-200 bg-gray-50">
                         <div className="flex items-center justify-between">
-                          <h3 className="font-bold text-gray-900">Your Tasks</h3>
+                          <h3 className="font-bold text-gray-900">My Tasks</h3>
                           <span className="text-xs text-gray-500">{tasks.length} total</span>
                         </div>
                       </div>

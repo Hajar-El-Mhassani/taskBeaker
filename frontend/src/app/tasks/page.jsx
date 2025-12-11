@@ -278,13 +278,13 @@ export default function TasksPage() {
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading your tasks...</p>
+                <p className="text-gray-600">Loading my tasks...</p>
               </div>
             </div>
           ) : tasks.length > 0 ? (
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Your Tasks ({tasks.length})</h2>
+                <h2 className="text-2xl font-bold text-gray-900">My Tasks ({tasks.length})</h2>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <span>Sort by:</span>
                   <select className="border border-gray-300 rounded-lg px-3 py-1">

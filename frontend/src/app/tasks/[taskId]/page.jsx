@@ -10,15 +10,28 @@ export default function TaskDetailPage({ params }) {
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('schedule'); // 'schedule' or 'list'
+  const [taskId, setTaskId] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
-    loadTask();
-  }, []);
+    // Handle params as Promise in Next.js 15+
+    const resolveParams = async () => {
+      const resolvedParams = await Promise.resolve(params);
+      setTaskId(resolvedParams.taskId);
+    };
+    resolveParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (taskId) {
+      loadTask();
+    }
+  }, [taskId]);
 
   async function loadTask() {
+    if (!taskId) return;
     try {
-      const response = await get(`/tasks/${params.taskId}`);
+      const response = await get(`/tasks/${taskId}`);
       console.log('Task data loaded:', response.data);
       console.log('First subtask:', response.data.subtasks[0]);
       setTask(response.data);
@@ -30,6 +43,7 @@ export default function TaskDetailPage({ params }) {
   }
 
   async function toggleSubtask(subtaskId, currentStatus) {
+    if (!taskId) return;
     try {
       // Optimistically update UI
       setTask(prev => ({
@@ -39,7 +53,7 @@ export default function TaskDetailPage({ params }) {
         )
       }));
       
-      const response = await patch(`/tasks/${params.taskId}/subtasks/${subtaskId}`, {
+      const response = await patch(`/tasks/${taskId}/subtasks/${subtaskId}`, {
         done: !currentStatus,
       });
       setTask(response.data);
@@ -51,8 +65,9 @@ export default function TaskDetailPage({ params }) {
   }
 
   async function updateSubtaskProgress(subtaskId, newProgress) {
+    if (!taskId) return;
     try {
-      const response = await patch(`/tasks/${params.taskId}/subtasks/${subtaskId}`, {
+      const response = await patch(`/tasks/${taskId}/subtasks/${subtaskId}`, {
         progress: newProgress,
       });
       
@@ -68,10 +83,11 @@ export default function TaskDetailPage({ params }) {
   }
 
   async function deleteTask() {
+    if (!taskId) return;
     if (!confirm('Are you sure you want to delete this task plan? This action cannot be undone.')) return;
 
     try {
-      await del(`/tasks/${params.taskId}`);
+      await del(`/tasks/${taskId}`);
       router.push('/tasks');
     } catch (error) {
       console.error('Failed to delete task:', error);
