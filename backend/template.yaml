@@ -107,6 +107,7 @@ Resources:
               - PUT
               - POST
               - HEAD
+              - DELETE
             AllowedHeaders:
               - '*'
             MaxAge: 3000
@@ -191,19 +192,14 @@ Resources:
           - GET
           - POST
           - PUT
-          - DELETE
           - PATCH
+          - DELETE
           - OPTIONS
+          - ANY
         AllowHeaders:
-          - 'Content-Type'
-          - 'Authorization'
-          - 'X-Amz-Date'
-          - 'X-Api-Key'
-          - 'X-Amz-Security-Token'
           - '*'
         ExposeHeaders:
-          - 'Content-Length'
-          - 'Content-Type'
+          - '*'
         MaxAge: 300
         AllowCredentials: false
 

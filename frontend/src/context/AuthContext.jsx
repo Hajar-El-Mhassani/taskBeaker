@@ -18,8 +18,8 @@ export function AuthProvider({ children }) {
 
   async function loadUser() {
     try {
-      // Check if tokens exist in sessionStorage
-      const storedTokens = sessionStorage.getItem('tokens');
+      // Check if tokens exist in localStorage
+      const storedTokens = localStorage.getItem('tokens');
       if (storedTokens) {
         const parsedTokens = JSON.parse(storedTokens);
         setTokensState(parsedTokens);
@@ -32,7 +32,7 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Failed to load user:', error);
       // Clear invalid tokens
-      sessionStorage.removeItem('tokens');
+      localStorage.removeItem('tokens');
       clearTokens();
     } finally {
       setLoading(false);
@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
       };
 
       // Store tokens
-      sessionStorage.setItem('tokens', JSON.stringify(userTokens));
+      localStorage.setItem('tokens', JSON.stringify(userTokens));
       setTokensState(userTokens);
       setTokens(userTokens);
 
@@ -75,7 +75,7 @@ export function AuthProvider({ children }) {
       };
 
       // Store tokens
-      sessionStorage.setItem('tokens', JSON.stringify(userTokens));
+      localStorage.setItem('tokens', JSON.stringify(userTokens));
       setTokensState(userTokens);
       setTokens(userTokens);
 
@@ -91,7 +91,7 @@ export function AuthProvider({ children }) {
 
   function logout() {
     // Clear tokens
-    sessionStorage.removeItem('tokens');
+    localStorage.removeItem('tokens');
     setTokensState(null);
     clearTokens();
 
