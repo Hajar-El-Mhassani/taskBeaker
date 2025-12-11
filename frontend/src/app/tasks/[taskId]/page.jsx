@@ -19,6 +19,8 @@ export default function TaskDetailPage({ params }) {
   async function loadTask() {
     try {
       const response = await get(`/tasks/${params.taskId}`);
+      console.log('Task data loaded:', response.data);
+      console.log('First subtask:', response.data.subtasks[0]);
       setTask(response.data);
     } catch (error) {
       console.error('Failed to load task:', error);
@@ -50,22 +52,18 @@ export default function TaskDetailPage({ params }) {
 
   async function updateSubtaskProgress(subtaskId, newProgress) {
     try {
-      // Optimistically update UI
-      setTask(prev => ({
-        ...prev,
-        subtasks: prev.subtasks.map(s => 
-          s.id === subtaskId ? { ...s, progress: newProgress } : s
-        )
-      }));
-      
       const response = await patch(`/tasks/${params.taskId}/subtasks/${subtaskId}`, {
         progress: newProgress,
       });
-      setTask(response.data);
+      
+      // Only update if successful
+      if (response.data) {
+        setTask(response.data);
+      }
     } catch (error) {
       console.error('Failed to update subtask progress:', error);
-      // Revert on error
-      loadTask();
+      // Don't revert - keep the local state
+      alert('Failed to save progress. Please try again.');
     }
   }
 

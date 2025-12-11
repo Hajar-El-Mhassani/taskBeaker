@@ -15,6 +15,7 @@ export default function TasksPage() {
     timeMode: 'days',
     amount: 5,
     startDate: new Date().toISOString().split('T')[0], // Today's date
+    endDate: '',
   });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
@@ -45,7 +46,7 @@ export default function TasksPage() {
       const newTaskId = response.data?.taskId;
       
       setShowForm(false);
-      setFormData({ taskName: '', timeMode: 'days', amount: 5, startDate: new Date().toISOString().split('T')[0] });
+      setFormData({ taskName: '', timeMode: 'days', amount: 5, startDate: new Date().toISOString().split('T')[0], endDate: '' });
       
       // Redirect to task details page
       if (newTaskId) {
@@ -158,7 +159,7 @@ export default function TasksPage() {
                   <p className="text-xs text-gray-500 mt-1">Give your task a clear, descriptive name</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Start Date *
@@ -176,6 +177,24 @@ export default function TasksPage() {
                     </p>
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      End Date (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition-all"
+                      value={formData.endDate}
+                      onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                      min={formData.startDate || new Date().toISOString().split('T')[0]}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Target completion date
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Time Mode *
@@ -230,7 +249,8 @@ export default function TasksPage() {
 
                 <div className="bg-gradient-to-r from-brand-50 to-primary-50 border border-brand-200 rounded-lg p-4">
                   <p className="text-sm text-gray-900">
-                    <strong>💡 Tip:</strong> AI will generate {formData.timeMode === 'days' ? `a ${formData.amount}-day` : `a ${formData.amount}-hour`} plan starting on {new Date(formData.startDate).toLocaleDateString()} with 3-10 subtasks, 
+                    <strong>💡 Tip:</strong> AI will generate {formData.timeMode === 'days' ? `a ${formData.amount}-day` : `a ${formData.amount}-hour`} plan starting on {new Date(formData.startDate).toLocaleDateString()}
+                    {formData.endDate && ` and ending on ${new Date(formData.endDate).toLocaleDateString()}`} with 3-10 subtasks, 
                     organized by priority and estimated duration.
                   </p>
                 </div>
