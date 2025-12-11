@@ -46,9 +46,9 @@ export default function LandingPage() {
 
       {/* Hero Section - Full Screen */}
       <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center">
           {/* Main Heading */}
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-extrabold text-gray-900 mb-8 leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
             Break Down Your Tasks
             <br />
             <span className="bg-gradient-to-r from-brand-500 to-primary-600 bg-clip-text text-transparent">
@@ -57,30 +57,30 @@ export default function LandingPage() {
           </h1>
 
           {/* Description */}
-          <p className="text-xl md:text-2xl lg:text-3xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
             Transform complex projects into manageable subtasks with AI-powered planning. 
             Track progress, set schedules, and achieve your goals faster.
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <Link
               href="/signup"
-              className="bg-gradient-to-r from-brand-500 to-primary-600 text-white hover:from-brand-600 hover:to-primary-700 font-bold px-10 py-5 rounded-xl transition-all shadow-2xl hover:shadow-3xl text-xl w-full sm:w-auto transform hover:scale-105"
+              className="bg-gradient-to-r from-brand-500 to-primary-600 text-white hover:from-brand-600 hover:to-primary-700 font-bold px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl text-base w-full sm:w-auto transform hover:scale-105"
             >
               Start Free Today →
             </Link>
             <Link
               href="/login"
-              className="bg-white text-gray-700 hover:bg-gray-50 font-bold px-10 py-5 rounded-xl transition-all shadow-xl hover:shadow-2xl border-2 border-gray-200 text-xl w-full sm:w-auto transform hover:scale-105"
+              className="bg-white text-gray-700 hover:bg-gray-50 font-bold px-8 py-3 rounded-lg transition-all shadow-md hover:shadow-lg border-2 border-gray-200 text-base w-full sm:w-auto transform hover:scale-105"
             >
               Sign In
             </Link>
           </div>
 
           {/* Scroll Indicator */}
-          <div className="mt-20 animate-bounce">
-            <svg className="w-8 h-8 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mt-16 animate-bounce">
+            <svg className="w-6 h-6 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
             <p className="text-sm text-gray-500 mt-2">Scroll to learn more</p>
