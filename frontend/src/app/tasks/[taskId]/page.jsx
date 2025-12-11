@@ -130,7 +130,13 @@ export default function TaskDetailPage({ params }) {
 
   const SubtaskItem = ({ subtask, showCheckbox = true }) => {
     const [expanded, setExpanded] = useState(true); // Default to expanded to show details
+    const [localProgress, setLocalProgress] = useState(subtask.progress || 0);
     const currentProgress = subtask.progress || 0;
+    
+    // Sync local progress when subtask changes
+    useEffect(() => {
+      setLocalProgress(subtask.progress || 0);
+    }, [subtask.progress]);
     
     // Determine status
     const getStatus = () => {
@@ -205,22 +211,31 @@ export default function TaskDetailPage({ params }) {
                   <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-sm font-bold text-gray-700">Track Progress:</label>
-                      <span className="text-lg font-bold text-brand-600">{currentProgress}%</span>
+                      <span className="text-lg font-bold text-brand-600">{localProgress}%</span>
                     </div>
                     <input
                       type="range"
                       min="0"
                       max="100"
                       step="5"
-                      value={currentProgress}
+                      value={localProgress}
                       onChange={(e) => {
                         e.stopPropagation();
-                        updateSubtaskProgress(subtask.id, parseInt(e.target.value));
+                        const newValue = parseInt(e.target.value);
+                        setLocalProgress(newValue);
+                      }}
+                      onMouseUp={(e) => {
+                        e.stopPropagation();
+                        updateSubtaskProgress(subtask.id, localProgress);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
+                        updateSubtaskProgress(subtask.id, localProgress);
                       }}
                       onClick={(e) => e.stopPropagation()}
                       className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-500"
                       style={{
-                        background: `linear-gradient(to right, #f97316 0%, #3b82f6 ${currentProgress}%, #e5e7eb ${currentProgress}%, #e5e7eb 100%)`
+                        background: `linear-gradient(to right, #f97316 0%, #3b82f6 ${localProgress}%, #e5e7eb ${localProgress}%, #e5e7eb 100%)`
                       }}
                     />
                     <div className="flex justify-between text-xs text-gray-600 mt-1 font-medium">
