@@ -5,8 +5,21 @@ const tasksRoutes = require('./routes/tasks');
 
 const app = express();
 
+// CORS Configuration
+const corsOptions = {
+  origin: [
+    'https://main.d55wh8rbod9xx.amplifyapp.com',
+    'http://localhost:3000'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Amz-Date', 'X-Api-Key', 'X-Amz-Security-Token'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  credentials: false,
+  maxAge: 300
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

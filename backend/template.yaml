@@ -185,15 +185,25 @@ Resources:
     Properties:
       CorsConfiguration:
         AllowOrigins:
-          - '*'
+          - 'https://main.d55wh8rbod9xx.amplifyapp.com'
+          - 'http://localhost:3000'
         AllowMethods:
           - GET
           - POST
           - PUT
           - DELETE
+          - PATCH
           - OPTIONS
         AllowHeaders:
+          - 'Content-Type'
+          - 'Authorization'
+          - 'X-Amz-Date'
+          - 'X-Api-Key'
+          - 'X-Amz-Security-Token'
           - '*'
+        ExposeHeaders:
+          - 'Content-Length'
+          - 'Content-Type'
         MaxAge: 300
         AllowCredentials: false
 
