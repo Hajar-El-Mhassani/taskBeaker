@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { get, patch, del } from '@/lib/api';
 import Navbar from '@/components/Navbar';
@@ -132,12 +132,14 @@ export default function TaskDetailPage({ params }) {
     const [isSaving, setIsSaving] = useState(false);
     const currentProgress = subtask.progress || 0;
     
-    // Sync local progress when subtask changes (but not while saving)
+    // Only sync when subtask ID changes (new subtask loaded)
+    const prevSubtaskId = useRef(subtask.id);
     useEffect(() => {
-      if (!isSaving) {
+      if (prevSubtaskId.current !== subtask.id) {
         setLocalProgress(subtask.progress || 0);
+        prevSubtaskId.current = subtask.id;
       }
-    }, [subtask.progress, isSaving]);
+    }, [subtask.id, subtask.progress]);
     
     // Determine status based on actual progress from database
     const getStatus = () => {

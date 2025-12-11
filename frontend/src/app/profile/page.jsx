@@ -11,7 +11,6 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     name: '',
     maxHoursPerDay: 8,
-    workDays: [],
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -23,21 +22,9 @@ export default function ProfilePage() {
       setFormData({
         name: user.name || '',
         maxHoursPerDay: user.preferences?.maxHoursPerDay || 8,
-        workDays: user.preferences?.workDays || [],
       });
     }
   }, [user]);
-
-  const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-  const toggleDay = (day) => {
-    setFormData(prev => ({
-      ...prev,
-      workDays: prev.workDays.includes(day)
-        ? prev.workDays.filter(d => d !== day)
-        : [...prev.workDays, day],
-    }));
-  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -45,33 +32,21 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
-      console.log('Updating profile with:', {
-        name: formData.name,
-        preferences: {
-          maxHoursPerDay: formData.maxHoursPerDay,
-          workDays: formData.workDays,
-        },
-      });
-
       const response = await patch('/auth/profile', {
         name: formData.name,
         preferences: {
           maxHoursPerDay: formData.maxHoursPerDay,
-          workDays: formData.workDays,
         },
       });
-      
-      console.log('Profile update response:', response);
       
       // Update local user state with the response
       if (response.data) {
         setLocalUser(response.data);
         // Also update the global user context
         updateUser(response.data);
-        setMessage('✅ Profile updated successfully!');
-      } else {
-        setMessage('⚠️ Update completed but no data returned');
       }
+      
+      setMessage('Profile updated successfully!');
     } catch (error) {
       console.error('Profile update error:', error);
       console.error('Error details:', {
@@ -250,23 +225,7 @@ export default function ProfilePage() {
                 value={formData.maxHoursPerDay}
                 onChange={(e) => setFormData({ ...formData, maxHoursPerDay: parseInt(e.target.value) })}
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Work Days</label>
-              <div className="grid grid-cols-2 gap-2">
-                {allDays.map(day => (
-                  <label key={day} className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.workDays.includes(day)}
-                      onChange={() => toggleDay(day)}
-                      className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
-                    />
-                    <span className="text-gray-700">{day}</span>
-                  </label>
-                ))}
-              </div>
+              <p className="text-xs text-gray-500 mt-1">How many hours per day you can work on tasks</p>
             </div>
 
             <button
