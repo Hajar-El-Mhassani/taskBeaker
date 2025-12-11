@@ -29,23 +29,43 @@ export default function TaskDetailPage({ params }) {
 
   async function toggleSubtask(subtaskId, currentStatus) {
     try {
+      // Optimistically update UI
+      setTask(prev => ({
+        ...prev,
+        subtasks: prev.subtasks.map(s => 
+          s.id === subtaskId ? { ...s, done: !currentStatus } : s
+        )
+      }));
+      
       const response = await patch(`/tasks/${params.taskId}/subtasks/${subtaskId}`, {
         done: !currentStatus,
       });
       setTask(response.data);
     } catch (error) {
       console.error('Failed to update subtask:', error);
+      // Revert on error
+      loadTask();
     }
   }
 
   async function updateSubtaskProgress(subtaskId, newProgress) {
     try {
+      // Optimistically update UI
+      setTask(prev => ({
+        ...prev,
+        subtasks: prev.subtasks.map(s => 
+          s.id === subtaskId ? { ...s, progress: newProgress } : s
+        )
+      }));
+      
       const response = await patch(`/tasks/${params.taskId}/subtasks/${subtaskId}`, {
         progress: newProgress,
       });
       setTask(response.data);
     } catch (error) {
       console.error('Failed to update subtask progress:', error);
+      // Revert on error
+      loadTask();
     }
   }
 
@@ -109,91 +129,124 @@ export default function TaskDetailPage({ params }) {
   }
 
   const SubtaskItem = ({ subtask, showCheckbox = true }) => {
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState(true); // Default to expanded to show details
     const currentProgress = subtask.progress || 0;
+    
+    // Determine status
+    const getStatus = () => {
+      if (subtask.done) return { label: 'Completed', color: 'bg-success-100 text-success-700', icon: '✅' };
+      if (currentProgress > 0) return { label: 'In Progress', color: 'bg-warning-100 text-warning-700', icon: '⚡' };
+      return { label: 'Not Started', color: 'bg-gray-100 text-gray-600', icon: '⏳' };
+    };
+    
+    const status = getStatus();
+    const hasDetails = subtask.details && subtask.details.length > 0;
 
     return (
       <div className={`rounded-lg transition-all ${
-        subtask.done ? 'bg-gray-50' : 'bg-white border-2 border-gray-100 hover:border-brand-200'
+        subtask.done ? 'bg-gray-50 border-2 border-success-200' : 'bg-white border-2 border-gray-100 hover:border-brand-200 hover:shadow-sm'
       }`}>
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-4 flex-1">
-            {showCheckbox && (
-              <input
-                type="checkbox"
-                checked={subtask.done}
-                onChange={() => toggleSubtask(subtask.id, subtask.done)}
-                className="w-6 h-6 text-brand-600 rounded-lg border-2 border-gray-300 focus:ring-2 focus:ring-brand-500 cursor-pointer"
-              />
-            )}
-            <div className="flex-1">
-              <p className={`font-medium ${subtask.done ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                {subtask.name}
-              </p>
-              {subtask.details && subtask.details.length > 0 && (
-                <button
-                  onClick={() => setExpanded(!expanded)}
-                  className="text-xs text-brand-600 hover:text-brand-700 mt-1 flex items-center space-x-1"
-                >
-                  <span>{expanded ? '▼' : '▶'}</span>
-                  <span>{expanded ? 'Hide' : 'Show'} details ({subtask.details.length})</span>
-                </button>
+        <div className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-start space-x-3 flex-1">
+              {showCheckbox && (
+                <input
+                  type="checkbox"
+                  checked={subtask.done}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    toggleSubtask(subtask.id, subtask.done);
+                  }}
+                  className="w-6 h-6 text-brand-600 rounded-lg border-2 border-gray-300 focus:ring-2 focus:ring-brand-500 cursor-pointer mt-0.5 flex-shrink-0"
+                />
               )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2 mb-2 flex-wrap">
+                  <p className={`font-semibold text-base ${subtask.done ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                    {subtask.name}
+                  </p>
+                  <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${status.color} flex items-center space-x-1 whitespace-nowrap`}>
+                    <span>{status.icon}</span>
+                    <span>{status.label}</span>
+                  </span>
+                </div>
+                
+                {/* Always show details if available */}
+                {hasDetails && (
+                  <div className="mb-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpanded(!expanded);
+                      }}
+                      className="text-xs font-semibold text-brand-600 hover:text-brand-700 mb-2 flex items-center space-x-1"
+                    >
+                      <span className="text-xs">{expanded ? '▼' : '▶'}</span>
+                      <span>{expanded ? 'Hide' : 'Show'} Details ({subtask.details.length})</span>
+                    </button>
+                    
+                    {expanded && (
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <ul className="space-y-2">
+                          {subtask.details.map((detail, idx) => (
+                            <li key={idx} className="text-sm text-gray-700 flex items-start space-x-2">
+                              <span className="text-brand-500 font-bold mt-0.5">•</span>
+                              <span>{detail}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Progress Slider - always visible when not done */}
+                {!subtask.done && (
+                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-bold text-gray-700">Track Progress:</label>
+                      <span className="text-lg font-bold text-brand-600">{currentProgress}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="5"
+                      value={currentProgress}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        updateSubtaskProgress(subtask.id, parseInt(e.target.value));
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                      style={{
+                        background: `linear-gradient(to right, #f97316 0%, #3b82f6 ${currentProgress}%, #e5e7eb ${currentProgress}%, #e5e7eb 100%)`
+                      }}
+                    />
+                    <div className="flex justify-between text-xs text-gray-600 mt-1 font-medium">
+                      <span>Not Started</span>
+                      <span>In Progress</span>
+                      <span>Almost Done</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex flex-col items-end space-y-2 ml-3">
+              <span className={`px-2.5 py-1 text-xs font-bold rounded-full whitespace-nowrap ${
+                subtask.priority === 'High' ? 'bg-danger-100 text-danger-700' :
+                subtask.priority === 'Medium' ? 'bg-warning-100 text-warning-700' :
+                'bg-success-100 text-success-700'
+              }`}>
+                {subtask.priority}
+              </span>
+              <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full whitespace-nowrap">
+                ⏱️ {subtask.duration}
+              </span>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
-            <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-              subtask.priority === 'High' ? 'bg-danger-100 text-danger-700' :
-              subtask.priority === 'Medium' ? 'bg-warning-100 text-warning-700' :
-              'bg-success-100 text-success-700'
-            }`}>
-              {subtask.priority}
-            </span>
-            <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-              {subtask.duration}
-            </span>
-            {subtask.done && <span className="text-xl">✅</span>}
-          </div>
         </div>
-
-        {/* Expanded Details */}
-        {expanded && subtask.details && (
-          <div className="px-4 pb-4 border-t border-gray-200 pt-3 mt-2">
-            <p className="text-sm font-semibold text-gray-700 mb-2">Details:</p>
-            <ul className="space-y-1 ml-4">
-              {subtask.details.map((detail, idx) => (
-                <li key={idx} className="text-sm text-gray-600 flex items-start space-x-2">
-                  <span className="text-brand-500 mt-0.5">•</span>
-                  <span>{detail}</span>
-                </li>
-              ))}
-            </ul>
-
-            {/* Progress Slider */}
-            {!subtask.done && (
-              <div className="mt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-semibold text-gray-700">Progress:</label>
-                  <span className="text-sm font-bold text-brand-600">{currentProgress}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={currentProgress}
-                  onChange={(e) => updateSubtaskProgress(subtask.id, parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-500"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>0%</span>
-                  <span>50%</span>
-                  <span>100%</span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     );
   };

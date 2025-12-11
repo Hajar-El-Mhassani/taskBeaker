@@ -35,7 +35,7 @@ export default function DashboardPage() {
 
       setStats({ total, completed, inProgress, pending });
 
-      // Get today's subtasks
+      // Get today's subtasks - prioritize high priority and in-progress items
       const today = [];
       allTasks.forEach(task => {
         task.subtasks?.forEach(subtask => {
@@ -48,6 +48,15 @@ export default function DashboardPage() {
           }
         });
       });
+      
+      // Sort by priority (High first) and progress (higher progress first)
+      today.sort((a, b) => {
+        const priorityOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
+        const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+        if (priorityDiff !== 0) return priorityDiff;
+        return (b.progress || 0) - (a.progress || 0);
+      });
+      
       setTodaySubtasks(today.slice(0, 8));
     } catch (error) {
       console.error('Failed to load tasks:', error);
@@ -124,38 +133,78 @@ export default function DashboardPage() {
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
                   </div>
                 ) : todaySubtasks.length > 0 ? (
-                  <div className="space-y-3">
-                    {todaySubtasks.map((subtask, index) => (
-                      <div 
-                        key={index} 
-                        onClick={() => router.push(`/tasks/${subtask.taskId}`)}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer group"
-                      >
-                        <div className="flex items-center space-x-4 flex-1">
-                          <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold">
-                            {index + 1}
+                  <div className="space-y-4">
+                    {todaySubtasks.map((subtask, index) => {
+                      const progress = subtask.progress || 0;
+                      const hasDetails = subtask.details && subtask.details.length > 0;
+                      
+                      return (
+                        <div 
+                          key={index} 
+                          onClick={() => router.push(`/tasks/${subtask.taskId}`)}
+                          className="bg-white border-2 border-gray-100 rounded-lg hover:border-brand-300 hover:shadow-md transition-all cursor-pointer group p-4"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-start space-x-3 flex-1">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-brand-500 to-primary-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 mt-0.5">
+                                {index + 1}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-900 group-hover:text-brand-600 transition-colors mb-1">
+                                  {subtask.name}
+                                </p>
+                                <p className="text-sm text-gray-500 mb-2">
+                                  📋 {subtask.taskName}
+                                </p>
+                                
+                                {/* Show first detail as preview */}
+                                {hasDetails && (
+                                  <div className="bg-gray-50 rounded-md p-2 mt-2">
+                                    <p className="text-xs text-gray-600 flex items-start space-x-1">
+                                      <span className="text-brand-500 mt-0.5">•</span>
+                                      <span>{subtask.details[0]}</span>
+                                    </p>
+                                    {subtask.details.length > 1 && (
+                                      <p className="text-xs text-brand-600 mt-1 ml-3">
+                                        +{subtask.details.length - 1} more details
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end space-y-2 ml-3">
+                              <span className={`px-2.5 py-1 text-xs font-bold rounded-full whitespace-nowrap ${
+                                subtask.priority === 'High' ? 'bg-danger-100 text-danger-700' :
+                                subtask.priority === 'Medium' ? 'bg-warning-100 text-warning-700' :
+                                'bg-success-100 text-success-700'
+                              }`}>
+                                {subtask.priority}
+                              </span>
+                              <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full whitespace-nowrap">
+                                ⏱️ {subtask.duration}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900 group-hover:text-primary-600 transition-colors">
-                              {subtask.name}
-                            </p>
-                            <p className="text-sm text-gray-500">{subtask.taskName}</p>
-                          </div>
+                          
+                          {/* Progress bar */}
+                          {progress > 0 && (
+                            <div className="mt-3 pt-3 border-t border-gray-100">
+                              <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                                <span className="font-medium">Progress</span>
+                                <span className="font-bold text-brand-600">{progress}%</span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div 
+                                  className="bg-gradient-to-r from-brand-500 to-primary-600 h-2 rounded-full transition-all"
+                                  style={{ width: `${progress}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center space-x-3">
-                          <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                            subtask.priority === 'High' ? 'bg-danger-100 text-danger-700' :
-                            subtask.priority === 'Medium' ? 'bg-warning-100 text-warning-700' :
-                            'bg-success-100 text-success-700'
-                          }`}>
-                            {subtask.priority}
-                          </span>
-                          <span className="text-sm font-medium text-gray-600 bg-white px-3 py-1 rounded-full">
-                            {subtask.duration}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-12">

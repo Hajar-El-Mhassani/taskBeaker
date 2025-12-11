@@ -77,10 +77,14 @@ export default function Navbar() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setTasksDropdownOpen(!tasksDropdownOpen)}
-                    className="text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-primary-50 px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-1"
+                    className={`px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-1 ${
+                      tasksDropdownOpen 
+                        ? 'bg-gradient-to-r from-brand-500 to-primary-600 text-white' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-primary-50'
+                    }`}
                   >
                     <span>Your Tasks</span>
-                    <span className={`transform transition-transform ${tasksDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
+                    <span className={`text-xs transform transition-transform ${tasksDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
                   </button>
                   
                   {tasksDropdownOpen && (
@@ -162,14 +166,19 @@ export default function Navbar() {
                   className="flex items-center space-x-2 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-all"
                 >
                   {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-gradient-to-r from-brand-500 to-primary-600 object-cover" />
+                    <img 
+                      src={user.avatarUrl} 
+                      alt="Avatar" 
+                      className="w-10 h-10 rounded-full border-2 border-brand-500 object-cover" 
+                      key={user.avatarUrl}
+                    />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-r from-brand-500 to-primary-600 text-white flex items-center justify-center font-bold text-lg">
                       {user.name?.[0]?.toUpperCase()}
                     </div>
                   )}
                   <span className="text-gray-700 font-medium hidden md:block">{user.name}</span>
-                  <span className={`text-gray-500 transform transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}>▼</span>
+                  <span className={`text-gray-500 text-xs transform transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}>▼</span>
                 </button>
 
                 {/* User Dropdown Menu */}

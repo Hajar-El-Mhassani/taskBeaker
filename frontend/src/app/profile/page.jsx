@@ -7,7 +7,7 @@ import Navbar from '@/components/Navbar';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     maxHoursPerDay: 8,
@@ -15,7 +15,6 @@ export default function ProfilePage() {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [avatarFile, setAvatarFile] = useState(null);
   const [localUser, setLocalUser] = useState(user);
 
   useEffect(() => {
@@ -57,6 +56,8 @@ export default function ProfilePage() {
       // Update local user state with the response
       if (response.data) {
         setLocalUser(response.data);
+        // Also update the global user context
+        updateUser(response.data);
       }
       
       setMessage('Profile updated successfully!');
@@ -93,7 +94,10 @@ export default function ProfilePage() {
       
       // Update local user state with new avatar URL
       if (response.data?.avatarUrl) {
-        setLocalUser(prev => ({ ...prev, avatarUrl: response.data.avatarUrl }));
+        const updatedUser = { ...localUser, avatarUrl: response.data.avatarUrl };
+        setLocalUser(updatedUser);
+        // Also update the global user context
+        updateUser(updatedUser);
       }
       
       setMessage('Avatar uploaded successfully!');
