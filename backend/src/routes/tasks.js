@@ -114,16 +114,32 @@ router.get('/:taskId', async (req, res) => {
 
 /**
  * PATCH /tasks/:taskId/subtasks/:subId
- * Update a subtask's status
+ * Update a subtask's status or progress
  */
 router.patch('/:taskId/subtasks/:subId', async (req, res) => {
   try {
     const { taskId, subId } = req.params;
-    const { done } = req.body;
+    const { done, progress } = req.body;
 
     // Validate input
-    if (typeof done !== 'boolean') {
-      return validationError(res, 'done must be a boolean value');
+    const updates = {};
+    
+    if (done !== undefined) {
+      if (typeof done !== 'boolean') {
+        return validationError(res, 'done must be a boolean value');
+      }
+      updates.done = done;
+    }
+
+    if (progress !== undefined) {
+      if (typeof progress !== 'number' || progress < 0 || progress > 100) {
+        return validationError(res, 'progress must be a number between 0 and 100');
+      }
+      updates.progress = progress;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return validationError(res, 'No valid updates provided');
     }
 
     // Verify task ownership first
@@ -138,7 +154,7 @@ router.patch('/:taskId/subtasks/:subId', async (req, res) => {
       req.user.userId,
       taskId,
       subId,
-      { done }
+      updates
     );
 
     return success(res, updatedPlan);

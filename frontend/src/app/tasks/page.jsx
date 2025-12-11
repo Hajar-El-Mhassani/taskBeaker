@@ -14,6 +14,7 @@ export default function TasksPage() {
     taskName: '',
     timeMode: 'days',
     amount: 5,
+    startDate: new Date().toISOString().split('T')[0], // Today's date
   });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
@@ -40,10 +41,18 @@ export default function TasksPage() {
     setCreating(true);
 
     try {
-      await post('/tasks/generate', formData);
+      const response = await post('/tasks/generate', formData);
+      const newTaskId = response.data?.taskId;
+      
       setShowForm(false);
-      setFormData({ taskName: '', timeMode: 'days', amount: 5 });
-      await loadTasks();
+      setFormData({ taskName: '', timeMode: 'days', amount: 5, startDate: new Date().toISOString().split('T')[0] });
+      
+      // Redirect to task details page
+      if (newTaskId) {
+        router.push(`/tasks/${newTaskId}`);
+      } else {
+        await loadTasks();
+      }
     } catch (err) {
       setError(err.message || 'Failed to create task');
     } finally {
@@ -149,7 +158,24 @@ export default function TasksPage() {
                   <p className="text-xs text-gray-500 mt-1">Give your task a clear, descriptive name</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Start Date *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-brand-500 focus:ring-2 focus:ring-brand-200 transition-all"
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      When do you want to start?
+                    </p>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Time Mode *
@@ -160,7 +186,7 @@ export default function TasksPage() {
                         onClick={() => setFormData({ ...formData, timeMode: 'days' })}
                         className={`py-3 px-4 rounded-lg font-medium transition-all ${
                           formData.timeMode === 'days'
-                            ? 'bg-primary-600 text-white shadow-lg'
+                            ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
@@ -171,7 +197,7 @@ export default function TasksPage() {
                         onClick={() => setFormData({ ...formData, timeMode: 'hours' })}
                         className={`py-3 px-4 rounded-lg font-medium transition-all ${
                           formData.timeMode === 'hours'
-                            ? 'bg-primary-600 text-white shadow-lg'
+                            ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lg'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
@@ -179,7 +205,7 @@ export default function TasksPage() {
                       </button>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Choose how you want to measure time
+                      Choose time measurement
                     </p>
                   </div>
 
@@ -197,14 +223,14 @@ export default function TasksPage() {
                       onChange={(e) => setFormData({ ...formData, amount: parseInt(e.target.value) || 1 })}
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      How much time do you have for this task?
+                      Duration of the task
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
-                  <p className="text-sm text-primary-900">
-                    <strong>💡 Tip:</strong> AI will generate {formData.timeMode === 'days' ? `a ${formData.amount}-day` : `a ${formData.amount}-hour`} plan with 3-10 subtasks, 
+                <div className="bg-gradient-to-r from-brand-50 to-primary-50 border border-brand-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-900">
+                    <strong>💡 Tip:</strong> AI will generate {formData.timeMode === 'days' ? `a ${formData.amount}-day` : `a ${formData.amount}-hour`} plan starting on {new Date(formData.startDate).toLocaleDateString()} with 3-10 subtasks, 
                     organized by priority and estimated duration.
                   </p>
                 </div>
@@ -212,7 +238,7 @@ export default function TasksPage() {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="w-full bg-primary-600 text-white hover:bg-primary-700 font-bold py-4 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-r from-brand-500 to-primary-600 text-white hover:from-brand-600 hover:to-primary-700 font-bold py-4 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {creating ? (
                     <span className="flex items-center justify-center space-x-2">

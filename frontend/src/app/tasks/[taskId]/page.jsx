@@ -38,6 +38,17 @@ export default function TaskDetailPage({ params }) {
     }
   }
 
+  async function updateSubtaskProgress(subtaskId, newProgress) {
+    try {
+      const response = await patch(`/tasks/${params.taskId}/subtasks/${subtaskId}`, {
+        progress: newProgress,
+      });
+      setTask(response.data);
+    } catch (error) {
+      console.error('Failed to update subtask progress:', error);
+    }
+  }
+
   async function deleteTask() {
     if (!confirm('Are you sure you want to delete this task plan? This action cannot be undone.')) return;
 
@@ -97,40 +108,95 @@ export default function TaskDetailPage({ params }) {
     });
   }
 
-  const SubtaskItem = ({ subtask, showCheckbox = true }) => (
-    <div className={`flex items-center justify-between p-4 rounded-lg transition-all ${
-      subtask.done ? 'bg-gray-50' : 'bg-white border-2 border-gray-100 hover:border-primary-200'
-    }`}>
-      <div className="flex items-center space-x-4 flex-1">
-        {showCheckbox && (
-          <input
-            type="checkbox"
-            checked={subtask.done}
-            onChange={() => toggleSubtask(subtask.id, subtask.done)}
-            className="w-6 h-6 text-primary-600 rounded-lg border-2 border-gray-300 focus:ring-2 focus:ring-primary-500 cursor-pointer"
-          />
-        )}
-        <div className="flex-1">
-          <p className={`font-medium ${subtask.done ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-            {subtask.name}
-          </p>
+  const SubtaskItem = ({ subtask, showCheckbox = true }) => {
+    const [expanded, setExpanded] = useState(false);
+    const currentProgress = subtask.progress || 0;
+
+    return (
+      <div className={`rounded-lg transition-all ${
+        subtask.done ? 'bg-gray-50' : 'bg-white border-2 border-gray-100 hover:border-brand-200'
+      }`}>
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center space-x-4 flex-1">
+            {showCheckbox && (
+              <input
+                type="checkbox"
+                checked={subtask.done}
+                onChange={() => toggleSubtask(subtask.id, subtask.done)}
+                className="w-6 h-6 text-brand-600 rounded-lg border-2 border-gray-300 focus:ring-2 focus:ring-brand-500 cursor-pointer"
+              />
+            )}
+            <div className="flex-1">
+              <p className={`font-medium ${subtask.done ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                {subtask.name}
+              </p>
+              {subtask.details && subtask.details.length > 0 && (
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="text-xs text-brand-600 hover:text-brand-700 mt-1 flex items-center space-x-1"
+                >
+                  <span>{expanded ? '▼' : '▶'}</span>
+                  <span>{expanded ? 'Hide' : 'Show'} details ({subtask.details.length})</span>
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+              subtask.priority === 'High' ? 'bg-danger-100 text-danger-700' :
+              subtask.priority === 'Medium' ? 'bg-warning-100 text-warning-700' :
+              'bg-success-100 text-success-700'
+            }`}>
+              {subtask.priority}
+            </span>
+            <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+              {subtask.duration}
+            </span>
+            {subtask.done && <span className="text-xl">✅</span>}
+          </div>
         </div>
+
+        {/* Expanded Details */}
+        {expanded && subtask.details && (
+          <div className="px-4 pb-4 border-t border-gray-200 pt-3 mt-2">
+            <p className="text-sm font-semibold text-gray-700 mb-2">Details:</p>
+            <ul className="space-y-1 ml-4">
+              {subtask.details.map((detail, idx) => (
+                <li key={idx} className="text-sm text-gray-600 flex items-start space-x-2">
+                  <span className="text-brand-500 mt-0.5">•</span>
+                  <span>{detail}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Progress Slider */}
+            {!subtask.done && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-semibold text-gray-700">Progress:</label>
+                  <span className="text-sm font-bold text-brand-600">{currentProgress}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={currentProgress}
+                  onChange={(e) => updateSubtaskProgress(subtask.id, parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-      <div className="flex items-center space-x-3">
-        <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-          subtask.priority === 'High' ? 'bg-danger-100 text-danger-700' :
-          subtask.priority === 'Medium' ? 'bg-warning-100 text-warning-700' :
-          'bg-success-100 text-success-700'
-        }`}>
-          {subtask.priority}
-        </span>
-        <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-          {subtask.duration}
-        </span>
-        {subtask.done && <span className="text-xl">✅</span>}
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <ProtectedRoute>

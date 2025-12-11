@@ -44,6 +44,8 @@ Generate a task plan with 3-10 subtasks. Each subtask should have:
 - duration: estimated time in format like "2h" or "45m"
 - priority: "High", "Medium", or "Low"
 - done: false (boolean)
+- details: array of 2-4 bullet points explaining what needs to be done in this subtask
+- progress: 0 (number from 0-100)
 
 Also create a schedule that distributes subtasks across ${timeMode === 'days' ? 'days' : 'sessions'}, respecting the ${maxHoursPerDay} hours per day limit.
 
@@ -55,7 +57,13 @@ Return ONLY a valid JSON object with this exact structure:
       "name": "Subtask name",
       "duration": "2h",
       "priority": "High",
-      "done": false
+      "done": false,
+      "details": [
+        "First step or detail",
+        "Second step or detail",
+        "Third step or detail"
+      ],
+      "progress": 0
     }
   ],
   "schedule": {
@@ -127,6 +135,12 @@ function generateFallbackPlan(taskName, timeMode, amount, maxHoursPerDay) {
       duration: '2h',
       priority: 'High',
       done: false,
+      details: [
+        'Gather requirements and objectives',
+        'Research best practices and approaches',
+        'Create initial project outline'
+      ],
+      progress: 0,
     },
     {
       id: '2',
@@ -134,6 +148,12 @@ function generateFallbackPlan(taskName, timeMode, amount, maxHoursPerDay) {
       duration: '1h',
       priority: 'High',
       done: false,
+      details: [
+        'Set up project structure',
+        'Configure necessary tools',
+        'Prepare development environment'
+      ],
+      progress: 0,
     },
     {
       id: '3',
@@ -141,6 +161,12 @@ function generateFallbackPlan(taskName, timeMode, amount, maxHoursPerDay) {
       duration: '3h',
       priority: 'High',
       done: false,
+      details: [
+        'Implement main functionality',
+        'Follow design specifications',
+        'Ensure code quality standards'
+      ],
+      progress: 0,
     },
     {
       id: '4',
@@ -148,6 +174,12 @@ function generateFallbackPlan(taskName, timeMode, amount, maxHoursPerDay) {
       duration: '2h',
       priority: 'Medium',
       done: false,
+      details: [
+        'Write and run unit tests',
+        'Perform integration testing',
+        'Fix identified bugs'
+      ],
+      progress: 0,
     },
     {
       id: '5',
@@ -155,6 +187,12 @@ function generateFallbackPlan(taskName, timeMode, amount, maxHoursPerDay) {
       duration: '1h',
       priority: 'Medium',
       done: false,
+      details: [
+        'Document code and APIs',
+        'Create user guides',
+        'Update project README'
+      ],
+      progress: 0,
     },
   ];
 
@@ -227,6 +265,16 @@ function validatePlan(plan) {
 
     // Check done is boolean
     if (typeof subtask.done !== 'boolean') {
+      return false;
+    }
+
+    // Check details is array (optional but should be array if present)
+    if (subtask.details && !Array.isArray(subtask.details)) {
+      return false;
+    }
+
+    // Check progress is number (optional but should be number if present)
+    if (subtask.progress !== undefined && typeof subtask.progress !== 'number') {
       return false;
     }
   }
