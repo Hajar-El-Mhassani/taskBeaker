@@ -77,14 +77,21 @@ export default function Navbar() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setTasksDropdownOpen(!tasksDropdownOpen)}
-                    className={`px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-1 ${
+                    className={`px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-2 ${
                       tasksDropdownOpen 
                         ? 'bg-gradient-to-r from-brand-500 to-primary-600 text-white' 
                         : 'text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-primary-50'
                     }`}
                   >
                     <span>Your Tasks</span>
-                    <span className={`text-xs transform transition-transform ${tasksDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
+                    <svg 
+                      className={`w-3 h-3 transform transition-transform ${tasksDropdownOpen ? 'rotate-180' : ''}`}
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </button>
                   
                   {tasksDropdownOpen && (
@@ -178,7 +185,14 @@ export default function Navbar() {
                     </div>
                   )}
                   <span className="text-gray-700 font-medium hidden md:block">{user.name}</span>
-                  <span className={`text-gray-500 text-xs transform transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}>▼</span>
+                  <svg 
+                    className={`w-3 h-3 text-gray-500 transform transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
 
                 {/* User Dropdown Menu */}
@@ -194,14 +208,14 @@ export default function Navbar() {
                         onClick={() => setUserMenuOpen(false)}
                         className="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
                       >
-                        ⚙️ Settings
+                        Settings
                       </Link>
                       <Link
                         href="/tasks"
                         onClick={() => setUserMenuOpen(false)}
                         className="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
                       >
-                        📋 My Tasks
+                        My Tasks
                       </Link>
                     </div>
                     <div className="border-t border-gray-200">
@@ -212,7 +226,7 @@ export default function Navbar() {
                         }}
                         className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors font-medium"
                       >
-                        🚪 Logout
+                        Logout
                       </button>
                     </div>
                   </div>

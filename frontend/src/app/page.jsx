@@ -78,33 +78,35 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
-            {/* Feature 1 */}
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all border border-gray-100">
-              <div className="text-5xl mb-4">🤖</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">AI-Powered Planning</h3>
-              <p className="text-gray-600">
-                Let AI break down your tasks into actionable subtasks with smart scheduling and priority management.
-              </p>
-            </div>
+          {/* Features Section */}
+          <div className="mt-20">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose TaskBreaker?</h2>
+            <p className="text-xl text-gray-600 mb-12">Everything you need to manage your tasks efficiently</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Feature 1 */}
+              <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">AI-Powered Planning</h3>
+                <p className="text-gray-600">
+                  Let AI break down your tasks into actionable subtasks with smart scheduling and priority management.
+                </p>
+              </div>
 
-            {/* Feature 2 */}
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all border border-gray-100">
-              <div className="text-5xl mb-4">📊</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Progress Tracking</h3>
-              <p className="text-gray-600">
-                Monitor your progress with visual indicators, completion percentages, and detailed breakdowns.
-              </p>
-            </div>
+              {/* Feature 2 */}
+              <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Progress Tracking</h3>
+                <p className="text-gray-600">
+                  Monitor your progress with visual indicators, completion percentages, and detailed breakdowns.
+                </p>
+              </div>
 
-            {/* Feature 3 */}
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all border border-gray-100">
-              <div className="text-5xl mb-4">⚡</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Smart Scheduling</h3>
-              <p className="text-gray-600">
-                Organize tasks by days or hours with intelligent time allocation based on your preferences.
-              </p>
+              {/* Feature 3 */}
+              <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Smart Scheduling</h3>
+                <p className="text-gray-600">
+                  Organize tasks by days or hours with intelligent time allocation based on your preferences.
+                </p>
+              </div>
             </div>
           </div>
 
