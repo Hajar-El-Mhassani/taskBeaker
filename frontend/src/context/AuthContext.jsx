@@ -18,6 +18,13 @@ export function AuthProvider({ children }) {
 
   async function loadUser() {
     try {
+      // Migrate from sessionStorage to localStorage (one-time migration)
+      const sessionTokens = sessionStorage.getItem('tokens');
+      if (sessionTokens && !localStorage.getItem('tokens')) {
+        localStorage.setItem('tokens', sessionTokens);
+        sessionStorage.removeItem('tokens');
+      }
+
       // Check if tokens exist in localStorage
       const storedTokens = localStorage.getItem('tokens');
       if (storedTokens) {
@@ -31,8 +38,9 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error('Failed to load user:', error);
-      // Clear invalid tokens
+      // Clear invalid tokens from both storages
       localStorage.removeItem('tokens');
+      sessionStorage.removeItem('tokens');
       clearTokens();
     } finally {
       setLoading(false);
@@ -90,8 +98,9 @@ export function AuthProvider({ children }) {
   }
 
   function logout() {
-    // Clear tokens
+    // Clear tokens from both storages
     localStorage.removeItem('tokens');
+    sessionStorage.removeItem('tokens');
     setTokensState(null);
     clearTokens();
 
