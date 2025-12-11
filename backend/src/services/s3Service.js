@@ -31,7 +31,7 @@ async function uploadAvatar(userId, fileBuffer, mimeType) {
     Key: key,
     Body: fileBuffer,
     ContentType: mimeType,
-    ACL: 'public-read',
+    // ACL removed - will use bucket default permissions
   };
 
   try {
