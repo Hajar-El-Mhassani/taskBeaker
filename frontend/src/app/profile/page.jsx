@@ -151,40 +151,42 @@ export default function ProfilePage() {
           {/* Profile Form */}
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
             <div>
-              <label className="label">Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
               <input
                 type="text"
-                className="input-field"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Enter your name"
               />
             </div>
 
             <div>
-              <label className="label">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
                 type="email"
-                className="input-field bg-gray-100"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                 value={localUser?.email || ''}
                 disabled
+                readOnly
               />
               <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
             </div>
 
             <div>
-              <label className="label">Maximum Hours Per Day</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Maximum Hours Per Day</label>
               <input
                 type="number"
                 min="1"
                 max="24"
-                className="input-field"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 value={formData.maxHoursPerDay}
                 onChange={(e) => setFormData({ ...formData, maxHoursPerDay: parseInt(e.target.value) })}
               />
             </div>
 
             <div>
-              <label className="label">Work Days</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Work Days</label>
               <div className="grid grid-cols-2 gap-2">
                 {allDays.map(day => (
                   <label key={day} className="flex items-center space-x-2 cursor-pointer">
@@ -192,7 +194,7 @@ export default function ProfilePage() {
                       type="checkbox"
                       checked={formData.workDays.includes(day)}
                       onChange={() => toggleDay(day)}
-                      className="w-4 h-4 text-primary-600 rounded"
+                      className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
                     />
                     <span className="text-gray-700">{day}</span>
                   </label>
@@ -203,7 +205,7 @@ export default function ProfilePage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full"
+              className="w-full bg-gradient-to-r from-brand-500 to-primary-600 text-white font-bold py-3 px-6 rounded-lg hover:from-brand-600 hover:to-primary-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
