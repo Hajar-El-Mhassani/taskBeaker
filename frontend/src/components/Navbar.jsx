@@ -43,20 +43,32 @@ export default function Navbar() {
     router.push('/login');
   };
 
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutsideUserMenu(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutsideUserMenu);
+    return () => document.removeEventListener('mousedown', handleClickOutsideUserMenu);
+  }, []);
+
   return (
-    <nav className="bg-gradient-to-r from-brand-500 to-primary-600 shadow-lg">
+    <nav className="bg-gray-50 shadow-md border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href={user ? '/dashboard' : '/'} className="text-2xl font-bold text-white flex items-center space-x-2">
-              <span>📋</span>
-              <span>TaskBreaker</span>
+            <Link href={user ? '/dashboard' : '/'} className="text-2xl font-bold bg-gradient-to-r from-brand-500 to-primary-600 bg-clip-text text-transparent">
+              TaskBreaker
             </Link>
             {user && (
               <div className="hidden md:flex ml-10 space-x-2">
                 <Link 
                   href="/dashboard" 
-                  className="text-white hover:bg-white hover:bg-opacity-20 px-4 py-2 rounded-lg transition-all font-medium"
+                  className="text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-primary-50 px-4 py-2 rounded-lg transition-all font-medium"
                 >
                   Dashboard
                 </Link>
@@ -65,7 +77,7 @@ export default function Navbar() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setTasksDropdownOpen(!tasksDropdownOpen)}
-                    className="text-white hover:bg-white hover:bg-opacity-20 px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-1"
+                    className="text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-primary-50 px-4 py-2 rounded-lg transition-all font-medium flex items-center space-x-1"
                   >
                     <span>Your Tasks</span>
                     <span className={`transform transition-transform ${tasksDropdownOpen ? 'rotate-180' : ''}`}>▼</span>
@@ -135,7 +147,7 @@ export default function Navbar() {
 
                 <Link 
                   href="/profile" 
-                  className="text-white hover:bg-white hover:bg-opacity-20 px-4 py-2 rounded-lg transition-all font-medium"
+                  className="text-gray-700 hover:bg-gradient-to-r hover:from-brand-50 hover:to-primary-50 px-4 py-2 rounded-lg transition-all font-medium"
                 >
                   Profile
                 </Link>
@@ -144,30 +156,65 @@ export default function Navbar() {
           </div>
           <div className="flex items-center space-x-4">
             {user ? (
-              <>
-                <div className="flex items-center space-x-2 bg-white bg-opacity-20 px-3 py-1.5 rounded-lg">
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center space-x-2 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-all"
+                >
                   {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="Avatar" className="w-8 h-8 rounded-full border-2 border-white" />
+                    <img src={user.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-gradient-to-r from-brand-500 to-primary-600 object-cover" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-white text-brand-600 flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-brand-500 to-primary-600 text-white flex items-center justify-center font-bold text-lg">
                       {user.name?.[0]?.toUpperCase()}
                     </div>
                   )}
-                  <span className="text-white font-medium">{user.name}</span>
-                </div>
-                <button 
-                  onClick={handleLogout} 
-                  className="bg-white text-brand-600 hover:bg-gray-100 font-medium px-4 py-2 rounded-lg transition-all"
-                >
-                  Logout
+                  <span className="text-gray-700 font-medium hidden md:block">{user.name}</span>
+                  <span className={`text-gray-500 transform transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}>▼</span>
                 </button>
-              </>
+
+                {/* User Dropdown Menu */}
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                    <div className="p-3 border-b border-gray-200">
+                      <p className="font-semibold text-gray-900">{user.name}</p>
+                      <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                    </div>
+                    <div className="py-2">
+                      <Link
+                        href="/profile"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        ⚙️ Settings
+                      </Link>
+                      <Link
+                        href="/tasks"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="block px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        📋 My Tasks
+                      </Link>
+                    </div>
+                    <div className="border-t border-gray-200">
+                      <button
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors font-medium"
+                      >
+                        🚪 Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
-                <Link href="/login" className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-medium px-4 py-2 rounded-lg transition-all">
+                <Link href="/login" className="text-gray-700 hover:bg-gray-100 font-medium px-4 py-2 rounded-lg transition-all">
                   Login
                 </Link>
-                <Link href="/signup" className="bg-white text-brand-600 hover:bg-gray-100 font-medium px-4 py-2 rounded-lg transition-all">
+                <Link href="/signup" className="bg-gradient-to-r from-brand-500 to-primary-600 text-white hover:from-brand-600 hover:to-primary-700 font-medium px-4 py-2 rounded-lg transition-all shadow-md">
                   Sign Up
                 </Link>
               </>
